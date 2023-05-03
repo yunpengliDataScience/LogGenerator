@@ -1,0 +1,25 @@
+global:
+  config_version: 3
+input:
+  type: file
+  path: C:/Projects/LogGenerator/activity.log
+  readall: true # Read from the beginning of the file? False means we start at the end of the file and read only new lines.
+imports:
+- type: grok_patterns
+  dir: ./patterns
+grok_patterns:
+- 'EXIM_MESSAGE [a-zA-Z ]*'
+metrics:
+- type: counter
+  name: user_activity
+  help: User Activity Count.
+  match: '%{DATE} %{TIME} %{HOSTNAME:hostname} user=%{USER:user} action=\"%{GREEDYDATA:action}\"'
+  labels:
+    user: '{{.user}}'
+    action: '{{.action}}'
+    
+server:
+  protocol: http
+  host: localhost
+  port: 9144
+  path: /user_activity_metrics
